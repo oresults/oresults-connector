@@ -1,7 +1,7 @@
 ```
 oresults-connector 1.0.0
 Otakar Hirš <tech@oresults.eu>
-Tool for automatic upload of start list and result files to Oresutls.eu
+Tool for automatic upload of start list and result files to OResutls.eu
 
 USAGE:
     oresults-connector [OPTIONS] --key <API_KEY> --results <PATH_RESULTS>
