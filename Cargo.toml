@@ -1,0 +1,18 @@
+[package]
+name = "oresults-connector"
+version = "1.0.0"
+edition = "2021"
+authors = ["Otakar Hirš <tech@oresults.eu>"]
+description = "Tool for automatic upload of start list and result files to Oresutls.eu"
+documentation = "https://docs.oresults.eu"
+homepage = "https://oresults.eu"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+clap = { version = "3.2.16", features = ["derive"] }
+reqwest = { version = "0.11.11", features = ["multipart", "blocking"] }
+notify = "4.0.17"
+tracing = "0.1.36"
+tracing-subscriber = "0.2.0"
+anyhow = "1.0.59"
