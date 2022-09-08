@@ -3,7 +3,7 @@ name = "oresults-connector"
 version = "1.1.0"
 edition = "2021"
 authors = ["Otakar Hirš <tech@oresults.eu>"]
-description = "Tool for automatic upload of start list and result files to Oresutls.eu\n\nSupply an \"API key\" you get from event settings and specify \"path\" to folder, that will be recursivelly watched for file changes. Recognized iof xml ResultList and StartList files will get automaticly uploaded on change."
+description = "Tool for automatic upload of start list and result files to OResutls.eu\n\nSupply an \"API key\" you get from event settings and specify \"path\" to folder, that will be recursivelly watched for file changes. Recognized iof xml ResultList and StartList files will get automaticly uploaded on change."
 documentation = "https://docs.oresults.eu"
 homepage = "https://oresults.eu"
 
