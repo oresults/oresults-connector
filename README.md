@@ -1,6 +1,6 @@
 # OResults connector
-Tool for automatic upload of start list and result files to OResutls.eu  
-Files in given folder are uploaded on creation or change.  
+Tool for automatic upload of start list and result files to OResults. It uploads files from a given folder as they are created or modified. 
+
 Part of the [OResults](https://oresults.eu) platform. See [docs for organizers](https://docs.oresults.eu) for more details.
 
 ### Download 
@@ -13,7 +13,7 @@ See [Releases](https://github.com/oresults/oresults-connector/releases).
 ```
 oresults-connector 1.1.0
 Otakar Hirš <tech@oresults.eu>
-Tool for automatic upload of start list and result files to Oresutls.eu
+Tool for automatic upload of start list and result files to OResults.
 
 Supply an "API key" you get from event settings and specify "path" to folder, that will be
 recursivelly watched for file changes. Recognized iof xml ResultList and StartList files will get
@@ -30,4 +30,4 @@ OPTIONS:
 ```
 
 ### QuickEvent
-ps: If you are using [QuickEvent](https://github.com/Quick-Event/quickbox), you can use integrated service instead. It is not available in the released version yet, but was sucessfully tested on local race. See https://github.com/Quick-Event/quickbox/actions/runs/2951271536 for download link.
+If you use [QuickEvent](https://github.com/Quick-Event/quickbox), you can use the newly integrated OResults Connector service. It is not available in the released version yet but was sucessfully tested on local race. See https://github.com/Quick-Event/quickbox/actions/runs/2951271536 for download link.
