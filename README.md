@@ -30,4 +30,4 @@ OPTIONS:
 ```
 
 ### QuickEvent
-ps: If you are using ![QuickEvent](https://github.com/Quick-Event/quickbox), you can use integrated service instead. It is not available in the released version yet, but was sucessfully tested on local race. See https://github.com/Quick-Event/quickbox/actions/runs/2951271536 for download link.
+ps: If you are using [QuickEvent](https://github.com/Quick-Event/quickbox), you can use integrated service instead. It is not available in the released version yet, but was sucessfully tested on local race. See https://github.com/Quick-Event/quickbox/actions/runs/2951271536 for download link.
