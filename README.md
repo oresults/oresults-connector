@@ -1,10 +1,10 @@
 # OResults connector
 Tool for automatic upload of start list and result files to OResutls.eu  
 Files in given folder are uploaded on creation or change.  
-Part of the ![OResults](https://oresults.eu) platform. See ![docs for organizers](https://docs.oresults.eu) for more details.
+Part of the [OResults](https://oresults.eu) platform. See [docs for organizers](https://docs.oresults.eu) for more details.
 
 ### Download 
-See ![Releases](https://github.com/oresults/oresults-connector/releases).
+See [Releases](https://github.com/oresults/oresults-connector/releases).
 
 ### Usage
 `oresults-connector --key 48qh1d31hd1 --path ./folder_with_xml_files`
