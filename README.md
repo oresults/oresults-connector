@@ -11,7 +11,7 @@ See [Releases](https://github.com/oresults/oresults-connector/releases).
 
 ---
 ```
-oresults-connector 1.1.0
+oresults-connector 1.2.0
 Otakar Hirš <tech@oresults.eu>
 Tool for automatic upload of start list and result files to OResults.
 

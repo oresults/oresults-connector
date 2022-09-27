@@ -1,13 +1,11 @@
-use std::ffi::OsStr;
 use std::fs::File;
-use std::io::Read;
+use std::io::{BufReader};
 use std::path::PathBuf;
 use std::sync::mpsc::channel;
 use std::thread::sleep;
 use std::time::Duration;
 use anyhow::{anyhow, Error};
 use clap::{Parser};
-use lazy_regex::regex_is_match;
 use notify::{DebouncedEvent, RecommendedWatcher, RecursiveMode, Watcher};
 use tracing::{error, info, Level, warn};
 use tracing_subscriber::FmtSubscriber;
@@ -27,12 +25,59 @@ struct Cli {
 
 }
 
-fn upload_file(file: String, api_key: &String, file_name: &str, upload_path: &str) {
+fn get_file_name(path: PathBuf) -> Result<String, Error>{
+    if let Some(file_name) = path.file_name() {
+        let file_name = file_name.to_str().ok_or(anyhow!("Invalid characters in file_name"))?.to_string();
+        return Ok(file_name);
+    }
+    Err(anyhow!("Failed to get file_name"))
+}
+
+fn is_xml_file(path: &PathBuf, name: &[u8]) -> bool {
+    let file = match File::open(path) {
+        Ok(f) => f,
+        Err(e) => {
+            error!("Failed to open file: {}", e);
+            return false;
+        }
+    };
+    let mut buf = Vec::new();
+    let r = BufReader::new(file);
+    let mut reader = quick_xml::reader::Reader::from_reader(r);
+    loop {
+        match reader.read_event_into(&mut buf) {
+            Ok(quick_xml::events::Event::Eof) | Err(_) => break,
+            Ok(quick_xml::events::Event::Start(e)) => {
+                return e.name().into_inner() == name;
+            }
+            _ => (),
+        }
+    };
+    return false;
+}
+
+/// looks for pattern found in IOF XML v3 StartList
+fn is_start_list(path: &PathBuf) -> bool {
+    is_xml_file(path, b"StartList")
+}
+
+/// looks for pattern found in IOF XML v3 ResultList
+fn is_result_list(path: &PathBuf) -> bool {
+    is_xml_file(path, b"ResultList")
+}
+
+fn upload_file(path: &PathBuf, api_key: &String, file_name: &str, file_type: &str, upload_path: &str) {
     let client = reqwest::blocking::Client::new();
 
-    let form = reqwest::blocking::multipart::Form::new()
+    let form = match reqwest::blocking::multipart::Form::new()
         .text("apiKey", api_key.clone())
-        .text("file", file);
+        .file("file", path) {
+        Ok(f) => f,
+        Err(e) =>  {
+            error!("{} | {} | failed to open file, {}", file_type, file_name, e);
+            return;
+        }
+    };
 
     match client.post(format!("{}{}", API_URL, upload_path))
         .multipart(form)
@@ -40,13 +85,13 @@ fn upload_file(file: String, api_key: &String, file_name: &str, upload_path: &st
     {
         Ok(response) => {
             if response.status().is_success() {
-                info!("\"{}\" uploaded", file_name);
+                info!("{} | {} | uploaded", file_type, file_name);
             }
             else {
-                error!("\"{}\" upload failed: {:?}", file_name, response.text().unwrap_or("cannot decode response body".to_string()))
+                error!("{} | {} | upload failed, {}", file_type, file_name, response.text().unwrap_or("cannot decode response body".to_string()))
             }
         },
-        Err(e) => error!("\"{}\" upload failed: {:?}", file_name, e)
+        Err(e) => error!("{} | {} | upload failed, {}", file_type, file_name, e)
     };
 }
 
@@ -69,33 +114,24 @@ fn watch_and_upload(folder_path: PathBuf, api_key: String) {
         info!("{:?} is a valid path, recursively watching for file changes", folder_path.canonicalize().unwrap_or(folder_path));
         loop {
             match rx.recv() {
-                Ok(DebouncedEvent::NoticeRemove(p)) => {
-                    if let Ok((file, file_name)) = get_xml_file_as_string(p) {
-                        if is_start_list(&file) {
-                            info!("StartList file removed: {}", &file_name);
-                        }
-                        if is_result_list(&file) {
-                            info!("ResultList file removed: {}", &file_name);
-                        }
-                    }
-                },
                 Ok(DebouncedEvent::Create(p)) |
                 Ok(DebouncedEvent::Write(p)) |
                 Ok(DebouncedEvent::Chmod(p)) => {
-                    if let Ok((file, file_name)) = get_xml_file_as_string(p.clone()) {
-                        if is_start_list(&file) {
-                            info!("StartList file changed");
-                            upload_file(file, &api_key, &file_name, "/start-lists?format=xml");
-                        }
-                        else if is_result_list(&file) {
-                            info!("ResultList file changed");
-                            upload_file(file, &api_key, &file_name, "/results");
-                        }
-                    }
-                    else {
-                        warn!("File changed, but not recognized: {:?}", p.canonicalize().unwrap_or(p));
+                    if let Ok(file_name) = get_file_name(p.clone()) {
+                         if is_start_list(&p) {
+                             info!("StartList | {} | change detected", file_name);
+                             upload_file(&p, &api_key, &file_name, "StartList",  "/start-lists");
+                         }
+                         else if is_result_list(&p) {
+                             info!("Results | {} | change detected", file_name);
+                             upload_file(&p, &api_key, &file_name, "Results", "/results");
+                         }
+                         else {
+                             warn!("unrecognized | {:?} | change detected", p.canonicalize().unwrap_or(p));
+                         }
                     }
                 },
+                Ok(DebouncedEvent::NoticeRemove(_)) |
                 Ok(DebouncedEvent::Remove(_)) |
                 Ok(DebouncedEvent::NoticeWrite(_)) |
                 Ok(DebouncedEvent::Rename(_,_)) |
@@ -107,20 +143,6 @@ fn watch_and_upload(folder_path: PathBuf, api_key: String) {
         }
     }
 }
-
-fn get_xml_file_as_string(path: PathBuf) -> Result<(String, String), Error> {
-    if path.extension() == Some(OsStr::new("xml")) {
-        if let Some(file_name) = path.file_name() {
-            let mut file = File::open(&path)?;
-            let mut contents = String::new();
-            file.read_to_string(&mut contents)?;
-            let file_name = file_name.to_str().ok_or(anyhow!("Could not get file_name"))?.to_string();
-            return Ok((contents, file_name));
-        }
-    }
-    Err(anyhow!("Failed to convert file to xml string"))
-}
-
 
 fn main() {
     let cli = Cli::parse();
@@ -136,15 +158,4 @@ fn main() {
 
     watch_and_upload(path, cli.key)
 
-}
-
-
-/// looks for pattern found in IOF XML v3 StartList
-fn is_start_list(file: &str) -> bool {
-    return regex_is_match!(r"<StartList[\s\S]*</StartList>", file);
-}
-
-/// looks for pattern found in IOF XML v3 ResultList
-fn is_result_list(file: &str) -> bool {
-    return regex_is_match!(r"<ResultList[\s\S]*</ResultList>", file);
 }
