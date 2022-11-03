@@ -9,7 +9,6 @@ See [Releases](https://github.com/oresults/oresults-connector/releases).
 ### Usage
 `oresults-connector --key 48qh1d31hd1 --path ./folder_with_xml_files`
 
----
 ```
 oresults-connector 1.2.0
 Otakar Hirš <tech@oresults.eu>
@@ -29,5 +28,10 @@ OPTIONS:
     -V, --version                 Print version information
 ```
 
+---
+# Use integrated services instead
 ### QuickEvent
-If you use [QuickEvent](https://github.com/Quick-Event/quickbox), you can use the newly integrated OResults Connector service. It is not available in the released version yet but was sucessfully tested on local race. See https://github.com/Quick-Event/quickbox/actions/runs/2951271536 for download link.
+If you use [QuickEvent](https://github.com/Quick-Event/quickbox), you can use the newly integrated OResults Connector service. It is available since release version [2.6.5](https://github.com/Quick-Event/quickbox/releases/tag/QE-v2.6.5).
+
+### MeOS
+If you use [MeOs](https://www.melin.nu/meos/en/), you can use the MeOS Online Protocol XML v2 in the services menu. The api endpoint is `https://api.oresults.eu/meos`, use the event API key as the password. (ZIP copression is not supported)
