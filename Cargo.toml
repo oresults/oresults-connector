@@ -1,6 +1,6 @@
 [package]
 name = "oresults-connector"
-version = "1.2.0"
+version = "1.3.0"
 edition = "2021"
 authors = ["Otakar Hirš <tech@oresults.eu>"]
 description = "Tool for automatic upload of start list and result files to OResutls.eu\n\nSupply an \"API key\" you get from event settings and specify \"path\" to folder, that will be recursivelly watched for file changes. Recognized iof xml ResultList and StartList files will get automaticly uploaded on change."
@@ -10,10 +10,11 @@ homepage = "https://oresults.eu"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-clap = { version = "3.2.16", features = ["derive"] }
+clap = { version = "4.1.11", features = ["derive"] }
 reqwest = { version = "0.11.11", features = ["multipart", "blocking"] }
-quick-xml = { version = "0.25.0", features = ["encoding"] }
+quick-xml = { version = "0.28.1", features = ["encoding"] }
 notify = "4.0.17"
 tracing = "0.1.36"
-tracing-subscriber = "0.2.0"
+tracing-subscriber = "0.3.16"
 anyhow = "1.0.59"
+flate2 = "1.0.25"

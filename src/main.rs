@@ -1,16 +1,19 @@
 use std::fs::File;
-use std::io::{BufReader};
+use std::io::{BufReader, Read};
 use std::path::PathBuf;
 use std::sync::mpsc::channel;
 use std::thread::sleep;
 use std::time::Duration;
 use anyhow::{anyhow, Error};
 use clap::{Parser};
+use flate2::Compression;
 use notify::{DebouncedEvent, RecommendedWatcher, RecursiveMode, Watcher};
 use tracing::{error, info, Level, warn};
 use tracing_subscriber::FmtSubscriber;
+use flate2::bufread::ZlibEncoder;
+use reqwest::blocking::multipart::Part;
 
-const API_URL: &'static str = "https://api.oresults.eu";
+const API_URL: &str = "https://api.oresults.eu";
 
 #[derive(Parser)]
 #[clap(author, version, about, long_about = None)]
@@ -27,7 +30,7 @@ struct Cli {
 
 fn get_file_name(path: PathBuf) -> Result<String, Error>{
     if let Some(file_name) = path.file_name() {
-        let file_name = file_name.to_str().ok_or(anyhow!("Invalid characters in file_name"))?.to_string();
+        let file_name = file_name.to_str().ok_or_else(|| anyhow!("Invalid characters in file_name"))?.to_string();
         return Ok(file_name);
     }
     Err(anyhow!("Failed to get file_name"))
@@ -53,7 +56,7 @@ fn is_xml_file(path: &PathBuf, name: &[u8]) -> bool {
             _ => (),
         }
     };
-    return false;
+    false
 }
 
 /// looks for pattern found in IOF XML v3 StartList
@@ -66,18 +69,29 @@ fn is_result_list(path: &PathBuf) -> bool {
     is_xml_file(path, b"ResultList")
 }
 
-fn upload_file(path: &PathBuf, api_key: &String, file_name: &str, file_type: &str, upload_path: &str) {
+fn compress_file(path: &PathBuf) -> Result<Vec<u8>, String> {
+    let file = File::open(path)
+        .map_err(|e| format!("Failed to open file: {:?}", e))?;
+    let mut compressed = ZlibEncoder::new(BufReader::new(file), Compression::fast());
+    let mut buffer = Vec::new();
+    compressed.read_to_end(&mut buffer)
+        .map_err(|e| format!("Failed to read file: {:?}", e))?;
+    Ok(buffer)
+}
+fn upload_file(path: &PathBuf, api_key: &str, file_name: &str, file_type: &str, upload_path: &str) {
     let client = reqwest::blocking::Client::new();
 
-    let form = match reqwest::blocking::multipart::Form::new()
-        .text("apiKey", api_key.clone())
-        .file("file", path) {
+    let compressed_file = match compress_file(path) {
         Ok(f) => f,
-        Err(e) =>  {
-            error!("{} | {} | failed to open file, {}", file_type, file_name, e);
+        Err(e) => {
+            error!("{} | {} | {}", file_type, file_name, e);
             return;
         }
     };
+
+    let form = reqwest::blocking::multipart::Form::new()
+        .text("apiKey", api_key.to_string())
+        .part("file", Part::bytes(compressed_file));
 
     match client.post(format!("{}{}", API_URL, upload_path))
         .multipart(form)
@@ -88,14 +102,14 @@ fn upload_file(path: &PathBuf, api_key: &String, file_name: &str, file_type: &st
                 info!("{} | {} | uploaded", file_type, file_name);
             }
             else {
-                error!("{} | {} | upload failed, {}", file_type, file_name, response.text().unwrap_or("cannot decode response body".to_string()))
+                error!("{} | {} | upload failed, {}", file_type, file_name, response.text().unwrap_or_else(|_| "cannot decode response body".to_string()))
             }
         },
         Err(e) => error!("{} | {} | upload failed, {}", file_type, file_name, e)
     };
 }
 
-fn watch_and_upload(folder_path: PathBuf, api_key: String) {
+fn watch_and_upload(folder_path: PathBuf, api_key: &str) {
     let (tx, rx) = channel();
     let mut watcher: RecommendedWatcher = Watcher::new(tx, Duration::from_millis(100))
         .expect("Failed to initialize watcher");
@@ -105,7 +119,7 @@ fn watch_and_upload(folder_path: PathBuf, api_key: String) {
                 folder_path.clone()
             }
             else {
-                PathBuf::from(".").canonicalize().unwrap_or(PathBuf::from(".")).join(folder_path.clone())
+                PathBuf::from(".").canonicalize().unwrap_or_else(|_| PathBuf::from(".")).join(folder_path.clone())
             };
             error!("Path {:?} does not exist", path);
             sleep(Duration::from_secs(10));
@@ -120,11 +134,11 @@ fn watch_and_upload(folder_path: PathBuf, api_key: String) {
                     if let Ok(file_name) = get_file_name(p.clone()) {
                          if is_start_list(&p) {
                              info!("StartList | {} | change detected", file_name);
-                             upload_file(&p, &api_key, &file_name, "StartList",  "/start-lists");
+                             upload_file(&p, api_key, &file_name, "StartList",  "/start-lists");
                          }
                          else if is_result_list(&p) {
                              info!("Results | {} | change detected", file_name);
-                             upload_file(&p, &api_key, &file_name, "Results", "/results");
+                             upload_file(&p, api_key, &file_name, "Results", "/results");
                          }
                          else {
                              warn!("unrecognized | {:?} | change detected", p.canonicalize().unwrap_or(p));
@@ -154,8 +168,7 @@ fn main() {
     tracing::subscriber::set_global_default(subscriber)
         .expect("setting default subscriber failed");
 
-    let path = PathBuf::from(cli.path.unwrap_or(".".to_string()));
+    let path = PathBuf::from(cli.path.unwrap_or_else(|| ".".to_string()));
 
-    watch_and_upload(path, cli.key)
-
+    watch_and_upload(path, &cli.key)
 }
