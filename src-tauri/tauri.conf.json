@@ -1,0 +1,48 @@
+{
+  "package": {
+    "productName": "OResults connector",
+    "version": "2.0.0"
+  },
+  "build": {
+    "distDir": "../dist",
+    "devPath": "http://localhost:5173/",
+    "beforeDevCommand": "yarn start",
+    "beforeBuildCommand": "yarn build"
+  },
+  "tauri": {
+    "bundle": {
+      "active": true,
+      "identifier": "eu.oresults.connector",
+      "icon": [
+        "icons/32x32.png",
+        "icons/128x128.png",
+        "icons/128x128@2x.png",
+        "icons/icon.png",
+        "icons/icon.icns",
+        "icons/icon.ico"
+      ]
+    },
+    "allowlist": {
+      "all": false,
+      "dialog": {
+        "open": true
+      }
+    },
+    "updater": {
+      "active": false
+    },
+    "windows": [
+      {
+        "title": "OResults connector",
+        "width": 980,
+        "height": 600,
+        "resizable": true,
+        "transparent": true,
+        "fullscreen": false
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  }
+}

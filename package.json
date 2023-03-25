@@ -1,0 +1,35 @@
+{
+  "name": "oresults-connector",
+  "version": "2.0.0",
+  "description": "",
+  "scripts": {
+    "start": "vite",
+    "dev": "vite",
+    "build": "vite build",
+    "serve": "vite preview",
+    "tauri": "tauri",
+    "lint": "prettier --check src && eslint src",
+    "format": "prettier --write src && eslint --fix src"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@tauri-apps/cli": "1.2.3",
+    "@typescript-eslint/eslint-plugin": "^5.56.0",
+    "@typescript-eslint/parser": "^5.56.0",
+    "eslint": "^8.36.0",
+    "eslint-config-prettier": "^8.6.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "eslint-plugin-solid": "^0.11.0",
+    "prettier": "2.8.4",
+    "typescript": "4.9.5",
+    "vite": "4.1.1",
+    "vite-plugin-solid": "2.6.1"
+  },
+  "dependencies": {
+    "@hope-ui/solid": "^0.6.7",
+    "@stitches/core": "^1.2.8",
+    "@tauri-apps/api": "1.2.0",
+    "solid-js": "1.6.15",
+    "solid-transition-group": "^0.0.10"
+  }
+}

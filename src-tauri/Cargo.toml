@@ -1,0 +1,34 @@
+[package]
+name = "oresults-connector"
+version = "2.0.0"
+description = "Tool for automatic upload of start list and results files to OResults. It uploads files from a given folder as they are created or modified."
+authors = [ "Otakar Hirš" ]
+license = "MIT"
+edition = "2021"
+
+[build-dependencies]
+tauri-build = { version = "1.2.1", features = [] }
+
+[dependencies]
+serde_json = "1.0"
+serde = { version = "1.0", features = [ "derive" ] }
+tauri = { version = "1.2.4", features = ["dialog-open"] }
+reqwest = { version = "0.11.11", features = ["multipart", "blocking"] }
+quick-xml = { version = "0.28.1", features = ["encoding"] }
+notify-debouncer-mini = "0.2.0"
+notify = "5.1.0"
+tracing = "0.1.36"
+tracing-subscriber = "0.3.16"
+anyhow = "1.0.59"
+flate2 = "1.0.25"
+
+[features]
+default = [ "custom-protocol" ]
+custom-protocol = [ "tauri/custom-protocol" ]
+
+[profile.release]
+panic = "abort" # Strip expensive panic clean-up logic
+codegen-units = 1 # Compile crates one after another so the compiler can optimize better
+lto = true # Enables link to optimizations
+opt-level = "s" # Optimize for binary size
+strip = true # Remove debug symbols

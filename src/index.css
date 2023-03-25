@@ -1,0 +1,41 @@
+html,
+body,
+#root {
+	height: 100%;
+	margin: 0;
+	padding: 0;
+}
+
+#App {
+	padding: 1em;
+	display: grid;
+	gap: 1em;
+	grid-template-columns: 4fr 1fr;
+	grid-template-rows: 6em 1fr;
+	grid-template-areas:
+		'inputs toggle'
+		'log log';
+}
+
+main {
+	grid-area: log;
+}
+
+.logo {
+	grid-area: logo;
+	justify-content: center;
+	max-height: 100%;
+}
+
+.inputs {
+	grid-area: inputs;
+}
+
+.on-off-toggle {
+	grid-area: toggle;
+	justify-content: center;
+}
+
+img {
+	padding: 1em;
+}
