@@ -1,6 +1,6 @@
 [package]
 name = "oresults-connector"
-version = "2.0.0"
+version = "2.1.0"
 description = "Tool for automatic upload of start list and results files to OResults. It uploads files from a given folder as they are created or modified."
 authors = [ "Otakar Hirš" ]
 license = "MIT"

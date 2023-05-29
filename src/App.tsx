@@ -48,7 +48,7 @@ const App: Component = () => {
 	const [isRunning, setIsRunning] = createSignal(false)
 	const [log, setLog] = createSignal<LogEntry[]>([])
 	const addLogEntry = (entry: LogEntry) => {
-		setLog([entry, ...log()])
+		setLog([{...entry, timestamp: Date.now()}, ...log()])
 	}
 	const isDisabled = () => apiKey() === '' || xmlPath() === ''
 
@@ -141,6 +141,7 @@ const App: Component = () => {
 					<TableCaption>Log</TableCaption>
 					<Thead>
 						<Tr>
+							<Th>Timestamp</Th>
 							<Th>Severity</Th>
 							<Th>Event</Th>
 							<Th>File</Th>
@@ -151,6 +152,7 @@ const App: Component = () => {
 							{(e) => {
 								return (
 									<Tr>
+										<Td>{new Date(e.timestamp).toLocaleTimeString()}</Td>
 										<Td>
 											<Tag
 												colorScheme={severityToColor(
